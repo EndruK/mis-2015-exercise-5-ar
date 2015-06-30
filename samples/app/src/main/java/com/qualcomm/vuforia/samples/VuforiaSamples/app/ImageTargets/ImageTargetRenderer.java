@@ -18,6 +18,7 @@ import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.util.Log;
 
+import com.qualcomm.vuforia.ImageTarget;
 import com.qualcomm.vuforia.Matrix44F;
 import com.qualcomm.vuforia.Renderer;
 import com.qualcomm.vuforia.State;
@@ -25,10 +26,12 @@ import com.qualcomm.vuforia.Tool;
 import com.qualcomm.vuforia.Trackable;
 import com.qualcomm.vuforia.TrackableResult;
 import com.qualcomm.vuforia.VIDEO_BACKGROUND_REFLECTION;
+import com.qualcomm.vuforia.Vec2F;
 import com.qualcomm.vuforia.Vuforia;
 import com.qualcomm.vuforia.samples.SampleApplication.SampleApplicationSession;
 import com.qualcomm.vuforia.samples.SampleApplication.utils.CubeShaders;
 import com.qualcomm.vuforia.samples.SampleApplication.utils.LoadingDialogHandler;
+import com.qualcomm.vuforia.samples.SampleApplication.utils.Plane;
 import com.qualcomm.vuforia.samples.SampleApplication.utils.SampleApplication3DModel;
 import com.qualcomm.vuforia.samples.SampleApplication.utils.SampleUtils;
 import com.qualcomm.vuforia.samples.SampleApplication.utils.Teapot;
@@ -58,6 +61,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     private int texSampler2DHandle;
     
     private Teapot mTeapot;
+    private Plane myPlane;
     
     private float kBuildingScale = 12.0f;
     private SampleApplication3DModel mBuildingsModel;
@@ -67,7 +71,6 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     boolean mIsActive = false;
     
     private static final float OBJECT_SCALE_FLOAT = 3.0f;
-    
     
     public ImageTargetRenderer(ImageTargets activity,
         SampleApplicationSession session)
@@ -118,6 +121,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     private void initRendering()
     {
         mTeapot = new Teapot();
+        myPlane = new Plane();
         
         mRenderer = Renderer.getInstance();
         
@@ -197,32 +201,34 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
             Matrix44F modelViewMatrix_Vuforia = Tool
                 .convertPose2GLMatrix(result.getPose());
             float[] modelViewMatrix = modelViewMatrix_Vuforia.getData();
-            
-            int textureIndex = trackable.getName().equalsIgnoreCase("stones") ? 0
-                : 1;
-            textureIndex = trackable.getName().equalsIgnoreCase("tarmac") ? 2
-                : textureIndex;
-            textureIndex = trackable.getName().equalsIgnoreCase("cat") ? 0
-                : textureIndex;
-            textureIndex = trackable.getName().equalsIgnoreCase("tree") ? 2
-                : textureIndex;
-            
+            int textureIndex = 0;
+            if(!mActivity.isExtendedTrackingActive()) {
+                textureIndex = trackable.getName().equalsIgnoreCase("stones") ? 0
+                        : 1;
+                textureIndex = trackable.getName().equalsIgnoreCase("tarmac") ? 2
+                        : textureIndex;
+                textureIndex = trackable.getName().equalsIgnoreCase("cat") ? 0
+                        : textureIndex;
+                textureIndex = trackable.getName().equalsIgnoreCase("tree") ? 2
+                        : textureIndex;
+            }
+            else {
+                // load the texture for the plane
+                textureIndex = WebTexture.getTextureIndex(trackable.getName());
+                //textureIndex = 0;
+            }
             // deal with the modelview and projection matrices
             float[] modelViewProjection = new float[16];
-            
-            if (!mActivity.isExtendedTrackingActive())
-            {
-                Matrix.translateM(modelViewMatrix, 0, 0.0f, 0.0f,
-                    OBJECT_SCALE_FLOAT);
-                Matrix.scaleM(modelViewMatrix, 0, OBJECT_SCALE_FLOAT,
-                    OBJECT_SCALE_FLOAT, OBJECT_SCALE_FLOAT);
-            } else
-            {
-                Matrix.rotateM(modelViewMatrix, 0, 90.0f, 1.0f, 0, 0);
-                Matrix.scaleM(modelViewMatrix, 0, kBuildingScale,
-                    kBuildingScale, kBuildingScale);
+
+            Matrix.translateM(modelViewMatrix, 0, 0.0f, 0.0f,
+                OBJECT_SCALE_FLOAT);
+            // re-scale the plane x=100 y=100 z=40
+            if(mActivity.isExtendedTrackingActive()) {
+                Matrix.scaleM(modelViewMatrix, 0, 100.0f, 100.0f, 40.0f);
             }
-            
+            Matrix.scaleM(modelViewMatrix, 0, OBJECT_SCALE_FLOAT,
+                OBJECT_SCALE_FLOAT, OBJECT_SCALE_FLOAT);
+
             Matrix.multiplyMM(modelViewProjection, 0, vuforiaAppSession
                 .getProjectionMatrix().getData(), 0, modelViewMatrix, 0);
             
@@ -261,30 +267,39 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
                 GLES20.glDisableVertexAttribArray(vertexHandle);
                 GLES20.glDisableVertexAttribArray(normalHandle);
                 GLES20.glDisableVertexAttribArray(textureCoordHandle);
-            } else
-            {
-                GLES20.glDisable(GLES20.GL_CULL_FACE);
+            }
+            // Draw Plane on the recognized images
+            else {
                 GLES20.glVertexAttribPointer(vertexHandle, 3, GLES20.GL_FLOAT,
-                    false, 0, mBuildingsModel.getVertices());
+                        false, 0, myPlane.getVertices());
                 GLES20.glVertexAttribPointer(normalHandle, 3, GLES20.GL_FLOAT,
-                    false, 0, mBuildingsModel.getNormals());
+                        false, 0, myPlane.getNormals());
                 GLES20.glVertexAttribPointer(textureCoordHandle, 2,
-                    GLES20.GL_FLOAT, false, 0, mBuildingsModel.getTexCoords());
-                
+                        GLES20.GL_FLOAT, false, 0, myPlane.getTexCoords());
+
                 GLES20.glEnableVertexAttribArray(vertexHandle);
                 GLES20.glEnableVertexAttribArray(normalHandle);
                 GLES20.glEnableVertexAttribArray(textureCoordHandle);
-                
+
+                // activate texture 0, bind it, and pass to shader
                 GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
                 GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,
-                    mTextures.get(3).mTextureID[0]);
-                GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false,
-                    modelViewProjection, 0);
+                        mTextures.get(textureIndex).mTextureID[0]);
                 GLES20.glUniform1i(texSampler2DHandle, 0);
-                GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0,
-                    mBuildingsModel.getNumObjectVertex());
-                
-                SampleUtils.checkGLError("Renderer DrawBuildings");
+
+                // pass the model view matrix to the shader
+                GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false,
+                        modelViewProjection, 0);
+
+                // finally draw the plane
+                GLES20.glDrawElements(GLES20.GL_TRIANGLES,
+                        myPlane.getNumObjectIndex(), GLES20.GL_UNSIGNED_SHORT,
+                        myPlane.getIndices());
+
+                // disable the enabled arrays
+                GLES20.glDisableVertexAttribArray(vertexHandle);
+                GLES20.glDisableVertexAttribArray(normalHandle);
+                GLES20.glDisableVertexAttribArray(textureCoordHandle);
             }
             
             SampleUtils.checkGLError("Render Frame");

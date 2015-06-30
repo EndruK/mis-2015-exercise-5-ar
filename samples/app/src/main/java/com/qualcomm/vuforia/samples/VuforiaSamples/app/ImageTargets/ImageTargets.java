@@ -15,6 +15,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
@@ -27,7 +28,9 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
+import android.webkit.WebView;
 import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.Toast;
@@ -94,8 +97,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private AlertDialog mErrorDialog;
     
     boolean mIsDroidDevice = false;
-    
-    
+
     // Called when the activity first starts or the user navigates back to an
     // activity.
     @Override
@@ -111,7 +113,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         //mDatasetStrings.add("Tarmac.xml");
         mDatasetStrings.add("LectureRooms.xml");
         mDatasetStrings.add("AugmentedBig.xml");
-
         vuforiaAppSession
             .initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         
@@ -174,8 +175,50 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             getAssets()));
         mTextures.add(Texture.loadTextureFromApk("TextureTeapotRed.png",
             getAssets()));
-        mTextures.add(Texture.loadTextureFromApk("ImageTargets/Buildings.jpeg",
-            getAssets()));
+        //mTextures.add(Texture.loadTextureFromApk("ImageTargets/Buildings.jpeg",
+        //    getAssets()));
+
+        //load all Web Images
+        WebTexture myWebTexture = new WebTexture();
+
+
+        String urlB11_015 = "http://www.uni-weimar.de/qisserver/rds?state=wplan&act=Raum&pool=Raum&show=plan&P.vx=kurz&raum.rgid=3218";
+        String urlB11_014 = "http://www.uni-weimar.de/qisserver/rds?state=wplan&act=Raum&pool=Raum&show=plan&P.vx=kurz&raum.rgid=3217";
+        String urlB11_013 = "http://www.uni-weimar.de/qisserver/rds?state=wplan&act=Raum&pool=Raum&show=plan&P.vx=kurz&raum.rgid=3216";
+        String urlHK7_HS  = "http://www.uni-weimar.de/qisserver/rds?state=wplan&act=Raum&pool=Raum&show=plan&P.vx=kurz&raum.rgid=2947";
+
+        //myWebView.loadUrl();
+        WebView tmpView = new WebView(this);
+        tmpView.setLayoutParams(new LinearLayout.LayoutParams(50,50));
+        tmpView.loadUrl(urlB11_015);
+        myWebTexture.loadWebTexture(tmpView);
+
+        WebView B11_R015 = new WebView(this);
+        WebView B11_R014 = new WebView(this);
+        WebView B11_R013 = new WebView(this);
+        WebView HK7_HS   = new WebView(this);
+        B11_R015.loadUrl(urlB11_015);
+        B11_R014.loadUrl(urlB11_014);
+        B11_R013.loadUrl(urlB11_013);
+        HK7_HS.loadUrl(urlHK7_HS);
+
+        B11_R015.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        B11_R014.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        B11_R013.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        HK7_HS.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+
+        //myWebTexture.loadWebTexture(B11_R015);
+
+        Bitmap[] tmp = myWebTexture.getTextures();
+        System.out.println(tmp.length);
+        //add all Web Images to TextureVector
+        for (Bitmap img : tmp) {
+            int w = img.getWidth();
+            int h = img.getHeight();
+            int[] raw = new int[w*h];
+            img.getPixels(raw,0,w,0,0,w,h);
+            mTextures.add(Texture.loadTextureFromIntBuffer(raw,w,h));
+        }
     }
     
     
