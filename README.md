@@ -13,3 +13,7 @@ We decided to recognize the room signs for 5 professors of CSM
 - Prof. Stein
 
 If a door sign of one of these professors is scanned his foto is rendered in front of the door sign.
+
+## Tested With
+- Nexus 4
+- Samsung Galaxy S2
