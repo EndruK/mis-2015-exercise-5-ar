@@ -28,9 +28,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
-import android.webkit.WebView;
 import android.widget.CheckBox;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.Toast;
@@ -95,9 +93,12 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     
     // Alert Dialog used to display SDK errors
     private AlertDialog mErrorDialog;
+
+
+    private boolean loadingFinished = true;
+    private boolean redirect = false;
     
     boolean mIsDroidDevice = false;
-
     // Called when the activity first starts or the user navigates back to an
     // activity.
     @Override
@@ -105,13 +106,13 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     {
         Log.d(LOGTAG, "onCreate");
         super.onCreate(savedInstanceState);
-        
+
         vuforiaAppSession = new SampleApplicationSession(this);
-        
+
         startLoadingAnimation();
         //mDatasetStrings.add("StonesAndChips.xml");
         //mDatasetStrings.add("Tarmac.xml");
-        mDatasetStrings.add("LectureRooms.xml");
+        mDatasetStrings.add("Profs.xml");
         mDatasetStrings.add("AugmentedBig.xml");
         vuforiaAppSession
             .initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -121,7 +122,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         // Load any sample specific textures:
         mTextures = new Vector<Texture>();
         loadTextures();
-        
+
         mIsDroidDevice = android.os.Build.MODEL.toLowerCase().startsWith(
             "droid");
         
@@ -166,7 +167,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     
     // We want to load specific textures from the APK, which we will later use
     // for rendering.
-    
     private void loadTextures()
     {
         mTextures.add(Texture.loadTextureFromApk("TextureTeapotBrass.png",
@@ -178,39 +178,14 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         //mTextures.add(Texture.loadTextureFromApk("ImageTargets/Buildings.jpeg",
         //    getAssets()));
 
-        //load all Web Images
         WebTexture myWebTexture = new WebTexture();
-
-
-        String urlB11_015 = "http://www.uni-weimar.de/qisserver/rds?state=wplan&act=Raum&pool=Raum&show=plan&P.vx=kurz&raum.rgid=3218";
-        String urlB11_014 = "http://www.uni-weimar.de/qisserver/rds?state=wplan&act=Raum&pool=Raum&show=plan&P.vx=kurz&raum.rgid=3217";
-        String urlB11_013 = "http://www.uni-weimar.de/qisserver/rds?state=wplan&act=Raum&pool=Raum&show=plan&P.vx=kurz&raum.rgid=3216";
-        String urlHK7_HS  = "http://www.uni-weimar.de/qisserver/rds?state=wplan&act=Raum&pool=Raum&show=plan&P.vx=kurz&raum.rgid=2947";
-
-        //myWebView.loadUrl();
-        WebView tmpView = new WebView(this);
-        tmpView.setLayoutParams(new LinearLayout.LayoutParams(50,50));
-        tmpView.loadUrl(urlB11_015);
-        myWebTexture.loadWebTexture(tmpView);
-
-        WebView B11_R015 = new WebView(this);
-        WebView B11_R014 = new WebView(this);
-        WebView B11_R013 = new WebView(this);
-        WebView HK7_HS   = new WebView(this);
-        B11_R015.loadUrl(urlB11_015);
-        B11_R014.loadUrl(urlB11_014);
-        B11_R013.loadUrl(urlB11_013);
-        HK7_HS.loadUrl(urlHK7_HS);
-
-        B11_R015.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        B11_R014.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        B11_R013.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        HK7_HS.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-
-        //myWebTexture.loadWebTexture(B11_R015);
+        myWebTexture.loadWebTexture("http://www.uni-weimar.de/uploads/pics/bertel_web.jpg");
+        myWebTexture.loadWebTexture("http://www.uni-weimar.de/uploads/pics/jakoby_web.jpg");
+        myWebTexture.loadWebTexture("http://www.uni-weimar.de/uploads/pics/schatter_web.jpg");
+        myWebTexture.loadWebTexture("http://www.uni-weimar.de/uploads/pics/echtler_web.jpg");
+        myWebTexture.loadWebTexture("http://www.uni-weimar.de/uploads/pics/stein_web.jpg");
 
         Bitmap[] tmp = myWebTexture.getTextures();
-        System.out.println(tmp.length);
         //add all Web Images to TextureVector
         for (Bitmap img : tmp) {
             int w = img.getWidth();
@@ -220,8 +195,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             mTextures.add(Texture.loadTextureFromIntBuffer(raw,w,h));
         }
     }
-    
-    
+
     // Called when the activity will start interacting with the user.
     @Override
     protected void onResume()
@@ -687,7 +661,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
         //group.addRadioItem("Stones & Chips", mStartDatasetsIndex, true);
         //group.addRadioItem("Tarmac", mStartDatasetsIndex + 1, false);
-        group.addRadioItem("Lecture Rooms", mStartDatasetsIndex, true);
+        group.addRadioItem("ProfessorImages", mStartDatasetsIndex, true);
         group.addRadioItem("cat & tree & city", mStartDatasetsIndex + 1, false);
         
         mSampleAppMenu.attachMenu();

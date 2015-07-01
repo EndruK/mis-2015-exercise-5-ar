@@ -1,6 +1,7 @@
 # Built application files
 *.apk
 *.ap_
+!samples/app/build/outputs/apk/app-debug.apk
 
 # Files for the Dalvik VM
 *.dex

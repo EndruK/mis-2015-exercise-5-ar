@@ -118,6 +118,7 @@
             android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize"
         	android:theme="@style/SampleAppsTheme"
  	        android:launchMode="singleTask"
+            android:hardwareAccelerated="false"
             >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

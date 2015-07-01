@@ -18,7 +18,6 @@ import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.util.Log;
 
-import com.qualcomm.vuforia.ImageTarget;
 import com.qualcomm.vuforia.Matrix44F;
 import com.qualcomm.vuforia.Renderer;
 import com.qualcomm.vuforia.State;
@@ -26,7 +25,6 @@ import com.qualcomm.vuforia.Tool;
 import com.qualcomm.vuforia.Trackable;
 import com.qualcomm.vuforia.TrackableResult;
 import com.qualcomm.vuforia.VIDEO_BACKGROUND_REFLECTION;
-import com.qualcomm.vuforia.Vec2F;
 import com.qualcomm.vuforia.Vuforia;
 import com.qualcomm.vuforia.samples.SampleApplication.SampleApplicationSession;
 import com.qualcomm.vuforia.samples.SampleApplication.utils.CubeShaders;
@@ -214,6 +212,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
             }
             else {
                 // load the texture for the plane
+
                 textureIndex = WebTexture.getTextureIndex(trackable.getName());
                 //textureIndex = 0;
             }

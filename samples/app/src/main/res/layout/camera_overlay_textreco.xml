@@ -64,5 +64,4 @@
         android:layout_below="@+id/loupeLayout"
         android:orientation="vertical" >
     </RelativeLayout>
-
 </RelativeLayout>
